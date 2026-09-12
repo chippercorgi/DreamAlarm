@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Ignore everything inside data, music, and noise folders
+data/*
+music/*
+noise/*
+
+# Operating System files
+.DS_Store
+Thumbs.db
