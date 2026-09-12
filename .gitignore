@@ -6,6 +6,11 @@ data/*
 music/*
 noise/*
 
+!data/alarm.json
+!data/.gitkeep
+!music/.gitkeep
+!noise/.gitkeep
+
 # Operating System files
 .DS_Store
 Thumbs.db
