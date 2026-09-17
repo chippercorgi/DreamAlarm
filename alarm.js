@@ -38,21 +38,21 @@ function scheduleAlarm(time) {
 
     /* Schedule light to fade in 30 minutes before alarm */
     const timeUntilAlarm = alarmTime - currentTime;
-    if (timeUntilAlarm > settings.lightSlowFadeTime) {
+    if (timeUntilAlarm > settings.slowLightFadeTime) {
 
-        light.turnLightOff(settings.lightFastFadeTime);
+        light.turnLightOff(settings.fastLightFadeTime);
 
-        const lightOnTime = timeUntilAlarm - settings.lightSlowFadeTime;
+        const lightOnTime = timeUntilAlarm - settings.slowLightFadeTime;
         const lightTimer = setTimeout(() => {
-            light.turnLightOn(settings.lightSlowFadeTime);
+            light.turnLightOn(settings.slowLightFadeTime);
         }, lightOnTime);
         timers.push(lightTimer);
 
     } else if (timeUntilAlarm > 0) {
-        light.turnLightOff(settings.lightFastFadeTime);
+        light.turnLightOff(settings.fastLightFadeTime);
         light.turnLightOn(timeUntilAlarm);
     } else {
-        light.turnLightOn(settings.lightFastFadeTime);
+        light.turnLightOn(settings.fastLightFadeTime);
     }
 }
 
@@ -69,10 +69,10 @@ async function turnOffAlarm() {
     sound.stopAudio(settings.fastAudioFadeTime);
 
     if (alarmTimePassed === false) {
-        light.turnLightOff(settings.lightFastFadeTime);
+        light.turnLightOff(settings.fastLightFadeTime);
     } else {
         setTimeout(() => {
-            light.turnLightOff(settings.lightFastFadeTime);
+            light.turnLightOff(settings.fastLightFadeTime);
         }, settings.lightTimeOutTime);
     }
 }

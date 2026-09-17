@@ -11,11 +11,11 @@ function minutes(m) {
 
 module.exports = {
     fastAudioFadeTime: seconds(5),
-    slowAudioFadeTime: seconds(30),
+    slowAudioFadeTime: seconds(60),
     musicVolume: 40,
     whiteNoiseVolume: 40,
 
-    lightSlowFadeTime: minutes(3),
-    lightFastFadeTime: seconds(5),
-    lightTimeOutTime: minutes(3)
+    fastLightFadeTime: seconds(5),
+    slowLightFadeTime: minutes(15),
+    lightTimeOutTime: minutes(10)
 };
