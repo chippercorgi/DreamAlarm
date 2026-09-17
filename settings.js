@@ -10,15 +10,12 @@ function minutes(m) {
 }
 
 module.exports = {
-    whiteNoiseFastFadeTime: seconds(5),
-    whiteNoiseSlowFadeTime: seconds(90),
-    whiteNoiseVolume: 100,
+    fastAudioFadeTime: seconds(5),
+    slowAudioFadeTime: seconds(30),
+    musicVolume: 40,
+    whiteNoiseVolume: 40,
 
-    musicFastFadeTime: seconds(5),
-    musicSlowFadeTime: seconds(90),
-    musicVolume: 100,
-
-    lightSlowFadeTime: minutes(30),
+    lightSlowFadeTime: minutes(3),
     lightFastFadeTime: seconds(5),
-    lightTimeOutTime: minutes(15)
+    lightTimeOutTime: minutes(3)
 };

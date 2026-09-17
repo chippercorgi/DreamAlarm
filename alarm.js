@@ -18,8 +18,8 @@ function scheduleAlarm(time) {
 
 
     /* Start white noise if there's enough time for it to matter */
-    if (currentTime < (time - settings.whiteNoiseSlowFadeTime)) {
-        sound.startWhiteNoise(settings.whiteNoiseFastFadeTime, settings.whiteNoiseVolume);
+    if (currentTime < (time - settings.slowAudioFadeTime)) {
+        sound.startWhiteNoise(settings.fastAudioFadeTime);
     }
 
     /* Schedule music to fade in after alarm time */
@@ -27,13 +27,13 @@ function scheduleAlarm(time) {
         const musicDelay = time - Date.now();
 
         const musicTimer = setTimeout(() => {
-            sound.startMusic(settings.whiteNoiseSlowFadeTime, settings.musicSlowFadeTime, settings.musicVolume);
+            sound.startMusic(settings.slowAudioFadeTime, settings.slowAudioFadeTime);
         }, musicDelay);
 
         timers.push(musicTimer);
     } else {
         console.log("We're already past the alarm time, play music!");
-        sound.startMusic(settings.whiteNoiseFastFadeTime, settings.musicFastFadeTime, settings.musicVolume);
+        sound.startMusic(settings.fastAudioFadeTime, settings.fastAudioFadeTime);
     }
 
     /* Schedule light to fade in 30 minutes before alarm */
@@ -66,9 +66,7 @@ async function turnOffAlarm() {
     timers.forEach(timerId => clearTimeout(timerId));
     timers = [];
 
-    if (sound.isMusicPlaying() == true || sound.isWhiteNoisePlaying() == true) {
-        sound.stopAudio(settings.musicFastFadeTime);
-    }
+    sound.stopAudio(settings.fastAudioFadeTime);
 
     if (alarmTimePassed === false) {
         light.turnLightOff(settings.lightFastFadeTime);
@@ -85,7 +83,7 @@ function getAlarmTime() {
 
 function loadAlarmTime() {
     try {
-        const savedAlarmPath = path.join(__dirname, '/data/alarm.json');
+        const savedAlarmPath = path.join(__dirname, 'alarm.json');
         const savedAlarm = JSON.parse(fs.readFileSync(savedAlarmPath, 'utf-8'));
 
         return savedAlarm.time;
@@ -97,7 +95,7 @@ function loadAlarmTime() {
 function saveAlarmTime(alarmTime) {
 
     try {
-        const savedAlarmPath = path.join(__dirname, '/data/alarm.json');
+        const savedAlarmPath = path.join(__dirname, 'alarm.json');
         fs.writeFileSync(savedAlarmPath, JSON.stringify({ time: alarmTime }, null, 2), 'utf8');
     } catch (error) {
         console.log(error);

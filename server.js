@@ -9,8 +9,6 @@ app.use(express.urlencoded({ extended: true }));
 
 const alarm = require('./alarm');
 const light = require('./light');
-const playlist = require('./playlist');
-playlist.generatePlaylist();
 
 const originalLog = console.log;
 console.log = function (...args) {

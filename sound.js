@@ -1,118 +1,143 @@
+const fs = require('fs');
+const path = require('path');
 const { spawn } = require("child_process");
 
-const audio = require('./audio');
+const settings = require('./settings');
 
 let audioProcess = null;
-let musicPlaying = false;
-let whiteNoisePlaying = false;
+let currentVolume = 0;
+let token = 0;
 
-async function startWhiteNoise(fadeInTime, volume) {
+let playlist = getFiles();
 
-    await audio.setVolume(0);
+async function startWhiteNoise(fadeInTime) {
+
+    const localToken = ++token;
 
     if (audioProcess != null) {
-        audioProcess.stdout.removeAllListeners();
         audioProcess.kill();
         audioProcess = null;
     }
 
-    musicPlaying = false;
-    whiteNoisePlaying = true;
-
     audioProcess = spawn('mpg123', ['-R']);
+    audioProcess.stdin.write('volume 0\n');
+    audioProcess.stdin.write('load ./noise/waterfall.mp3\n');
 
     audioProcess.stdout.on('data', (data) => {
         const output = data.toString();
-        if (output.includes('@F 1000')) {
-            audioProcess.stdin.write('JUMP 10\n');
+        if (output.includes('@F 2000')) {
+            audioProcess.stdin.write('jump 10\n');
         }
     });
 
-    audioProcess.stdin.write('load ./noise/waterfall.mp3\n');
-    await fadeInVolume(fadeInTime, volume);
-
-}
-
-async function startMusic(fadeOutTime, fadeInTime, volume) {
-
-    if (whiteNoisePlaying) {
-        await fadeOutVolume(fadeOutTime);
-    }
-
-    if (audioProcess != null) {
-        audioProcess.stdout.removeAllListeners();
-        audioProcess.kill();
-        audioProcess = null;
-    }
-
-    musicPlaying = true;
-    whiteNoisePlaying = false;
-
-    audioProcess = spawn('mpg123', ['-Z', '-@', './data/playlist.txt']);
-    console.log("Fading music in!");
-    await fadeInVolume(fadeInTime, volume);
-    console.log("Music now playing at full volume!");
-}
-
-async function stopAudio(time) {
-
-    await fadeOutVolume(time);
-
-    if (audioProcess != null) {
-        audioProcess.stdout.removeAllListeners();
-        audioProcess.kill();
-        audioProcess = null;
-    }
-
-    musicPlaying = false;
-    whiteNoisePlaying = false;
-}
-
-async function fadeInVolume(time, targetVolume) {
-
-    const delayTime = time > 30000 ? 5000 : 100;
-
-    const frames = Math.floor(time / delayTime);
-    console.log("Fade started!");
+    const delayTime = 100;
+    const frames = Math.floor(fadeInTime / 100);
     for (let i = 0; i <= frames; i++) {
-        const percent = (i / frames);
-        const volume = percent * targetVolume;
-        await audio.setVolume(volume);
-        await delay(delayTime)
-    }
-    console.log("Fade Ended");
-}
-
-async function fadeOutVolume(time) {
-    const startingVolume = await audio.getVolume();
-
-    const delayTime = time > 30000 ? 5000 : 100;
-
-    const frames = Math.floor(time / delayTime);
-    for (let i = 0; i <= frames; i++) {
-        const percent = 1 - (i / frames);
-        const volume = percent * startingVolume;
-        await audio.setVolume(volume);
+        if (localToken != token) {
+            return;
+        }
+        currentVolume = i / frames * settings.whiteNoiseVolume;
+        audioProcess.stdin.write(`volume ${currentVolume}\n`);
         await delay(delayTime);
     }
 }
 
-function isWhiteNoisePlaying() {
-    return whiteNoisePlaying;
+async function startMusic(fadeOutTime, fadeInTime) {
+
+    const localToken = ++token;
+
+    if (audioProcess != null) {
+        const delayTime = 100;
+        const frames = Math.floor(fadeOutTime / 100);
+        let startingVolume = currentVolume;
+        for (let i = frames; i >= 0; i--) {
+
+            if (localToken != token) {
+                return;
+            }
+
+            currentVolume = i / frames * startingVolume;
+            audioProcess.stdin.write(`volume ${currentVolume}\n`);
+            await delay(delayTime);
+        }
+
+        audioProcess.stdin.write('stop\n');
+        audioProcess.stdout.removeAllListeners('data');
+    } else {
+        audioProcess = spawn('mpg123', ['-R']);
+        audioProcess.stdin.write('volume 0\n');
+    }
+
+    shufflePlaylist();
+    let index = 0;
+    audioProcess.stdin.write(`load ${playlist[index++]}\n`);
+
+    audioProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        if (output.includes('@P 0')) {
+            audioProcess.stdin.write(`load ${playlist[index]}\n`);
+
+            index++;
+            if (index === playlist.length) {
+                index = 0;
+            }
+        }
+    });
+
+    const delayTime = 100;
+    const frames = Math.floor(fadeInTime / 100);
+    for (let i = 0; i <= frames; i++) {
+        if (localToken != token) {
+            return;
+        }
+        currentVolume = i / frames * settings.musicVolume;
+        audioProcess.stdin.write(`volume ${currentVolume}\n`);
+        await delay(delayTime);
+    }
 }
 
-function isMusicPlaying() {
-    return musicPlaying;
+async function stopAudio(fadeOutTime) {
+
+    const localToken = ++token;
+
+    if (audioProcess == null) {
+        return;
+    }
+
+    const delayTime = 100;
+    const frames = Math.floor(fadeOutTime / 100);
+    let startingVolume = currentVolume;
+    for (let i = frames; i >= 0; i--) {
+
+        if (localToken != token) {
+            return;
+        }
+
+        currentVolume = i / frames * startingVolume;
+        audioProcess.stdin.write(`volume ${currentVolume}\n`);
+        await delay(delayTime);
+    }
+
+    audioProcess.stdin.write(`stop\n`);
+    audioProcess.kill();
+    audioProcess = null;
+}
+
+function getFiles() {
+    const musicDir = path.join(__dirname, 'music');
+    const files = fs.readdirSync(musicDir).filter(file => file.toLowerCase().endsWith('.mp3')).map(file => path.join(musicDir, file));
+    return files;
+}
+
+function shufflePlaylist() {
+    for (let i = playlist.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
+    }
 }
 
 const delay = (durationMs) => {
     return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-module.exports = {
-    startWhiteNoise,
-    startMusic,
-    stopAudio,
-    isWhiteNoisePlaying,
-    isMusicPlaying
-};
+module.exports = { startWhiteNoise, startMusic, stopAudio };
