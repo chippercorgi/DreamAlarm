@@ -24,7 +24,7 @@ function scheduleAlarm(time) {
 
     /* Schedule music to fade in after alarm time */
     if (currentTime < time) {
-        const musicDelay = time - Date.now();
+        const musicDelay = time - currentTime;
 
         const musicTimer = setTimeout(() => {
             sound.startMusic(settings.slowAudioFadeTime, settings.slowAudioFadeTime);
@@ -56,7 +56,7 @@ function scheduleAlarm(time) {
     }
 }
 
-async function turnOffAlarm() {
+function turnOffAlarm() {
 
     const alarmTimePassed = Date.now() > alarmTime;
     alarmTime = 0;
