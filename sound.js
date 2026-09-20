@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require("child_process");
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
+import settings from './settings.js';
 
-const settings = require('./settings');
 
 let audioProcess = null;
 let currentVolume = 0;
@@ -10,7 +10,7 @@ let token = 0;
 
 let playlist = getFiles();
 
-async function startWhiteNoise(fadeInTime) {
+export async function startWhiteNoise(fadeInTime) {
 
     const localToken = ++token;
 
@@ -42,7 +42,7 @@ async function startWhiteNoise(fadeInTime) {
     }
 }
 
-async function startMusic(fadeOutTime, fadeInTime) {
+export async function startMusic(fadeOutTime, fadeInTime) {
 
     const localToken = ++token;
 
@@ -96,7 +96,7 @@ async function startMusic(fadeOutTime, fadeInTime) {
     }
 }
 
-async function stopAudio(fadeOutTime) {
+export async function stopAudio(fadeOutTime) {
 
     const localToken = ++token;
 
@@ -124,7 +124,7 @@ async function stopAudio(fadeOutTime) {
 }
 
 function getFiles() {
-    const musicDir = path.join(__dirname, 'music');
+    const musicDir = path.join(import.meta.dirname, 'music');
     const files = fs.readdirSync(musicDir).filter(file => file.toLowerCase().endsWith('.mp3')).map(file => path.join(musicDir, file));
     return files;
 }
@@ -139,5 +139,3 @@ function shufflePlaylist() {
 const delay = (durationMs) => {
     return new Promise(resolve => setTimeout(resolve, durationMs));
 }
-
-module.exports = { startWhiteNoise, startMusic, stopAudio };

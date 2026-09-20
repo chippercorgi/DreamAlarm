@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const light = require('./light');
-const sound = require('./sound');
-const settings = require('./settings');
+import fs from 'fs';
+import path from 'path';
+import light from './light.js';
+import sound from './sound.js';
+import settings from './settings.js';
 
 let timers = [];
 let alarmTime = loadAlarmTime();
@@ -11,7 +11,7 @@ if (alarmTime > 0) {
     scheduleAlarm(alarmTime);
 }
 
-function scheduleAlarm(time) {
+export function scheduleAlarm(time) {
     alarmTime = time;
     saveAlarmTime(time);
     const currentTime = Date.now();
@@ -56,7 +56,7 @@ function scheduleAlarm(time) {
     }
 }
 
-function turnOffAlarm() {
+export function turnOffAlarm() {
 
     const alarmTimePassed = Date.now() > alarmTime;
     alarmTime = 0;
@@ -77,41 +77,26 @@ function turnOffAlarm() {
     }
 }
 
-function getAlarmTime() {
+export function getAlarmTime() {
     return alarmTime;
 }
 
 function loadAlarmTime() {
     try {
-        const savedAlarmPath = path.join(__dirname, 'alarm.json');
+        const savedAlarmPath = path.join(import.meta.dirname, 'alarm.json');
         const savedAlarm = JSON.parse(fs.readFileSync(savedAlarmPath, 'utf-8'));
-
         return savedAlarm.time;
     } catch (error) {
         console.log(error);
+        return 0;
     }
 }
 
 function saveAlarmTime(alarmTime) {
-
     try {
-        const savedAlarmPath = path.join(__dirname, 'alarm.json');
+        const savedAlarmPath = path.join(import.meta.dirname, 'alarm.json');
         fs.writeFileSync(savedAlarmPath, JSON.stringify({ time: alarmTime }, null, 2), 'utf8');
     } catch (error) {
         console.log(error);
     }
-}
-
-const delay = (durationMs) => {
-    return new Promise(resolve => setTimeout(resolve, durationMs));
-}
-
-module.exports = {
-    scheduleAlarm,
-    getAlarmTime,
-    turnOffAlarm
-};
-
-if (require.main === module) {
-    scheduleAlarm(1788134400000);
 }

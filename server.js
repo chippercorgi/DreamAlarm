@@ -1,28 +1,14 @@
-const path = require('path');
-const express = require('express');
+import path from 'path';
+import express from 'express';
+import alarm from './alarm.js';
+import light from './light.js';
+
 const app = express();
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(import.meta.dirname, 'views'));
+app.use(express.static(path.join(import.meta.dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-
-const alarm = require('./alarm');
-const light = require('./light');
-
-const originalLog = console.log;
-console.log = function (...args) {
-
-    const stack = new Error().stack.split('\n');
-    const callerLine = stack[2] || '';
-    const match = callerLine.match(/\((.*):\d+:\d+\)/) || callerLine.match(/at\s+(.*):\d+:\d+/);
-    const filePath = match ? match[1] : 'unknown';
-    const fileName = path.basename(filePath);
-
-    const timestamp = new Date().toLocaleTimeString();
-    originalLog.apply(console, [`[${timestamp}]`, `[${fileName}]`, ...args]);
-};
-
 
 app.get('/', (req, res) => {
     const alarmTime = alarm.getAlarmTime();

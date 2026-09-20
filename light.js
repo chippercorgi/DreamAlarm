@@ -1,145 +1,93 @@
-const dgram = require('dgram');
-const BULB_IP = '10.0.1.10';
-const PORT = 38899;
+import { WizLight } from 'wiz-light';
+const wl = new WizLight('10.0.1.10', { statusCheckTimeout: 3000, retryTimes: 1 });
 
-let lightIsOn = false;
+let lightOn = false;
 
-async function turnLightOn(time) {
+export async function turnLightOn(fadeInTime) {
 
-    lightIsOn = true;
+    const lightState = await getLightState();
+    if (lightState === -1) {
+        return; // light has no power/isnt' responding, so just give up
+    }
 
-    let delayTime = 1000;
-    const frames = time / delayTime;
+    lightOn = true;
 
-    for (let i = 0; i <= frames; i++) {
+    const startingTime = Date.now();
+    let errorCount = 0;
 
-        if (lightIsOn == false) {
-            console.log("Light warm up canceled, turning off.");
-            return;
+    while (true) {
+
+        if (lightOn === false) {
+            break; // leave the loop if we've canceled turning the light on
         }
 
-        const progress = i / frames;
-        const curveProgress = Math.pow(progress, 2);
+        const timePassed = Date.now() - startingTime;
 
-        const dimming = Math.max(1, Math.round(curveProgress * 100));
-        const temp = 2200 + Math.round(2000 * curveProgress);
-        sendWizardCommand({ state: true, temp: temp, dimming: dimming });
-        await delay(delayTime);
-    }
-}
 
-async function turnLightOff(time) {
+        if (timePassed < fadeInTime) {
 
-    lightIsOn = false;
+            const progress = timePassed / fadeInTime;
+            const curveProgress = Math.pow(progress, 2);
 
-    const state = await getWizardState();
-
-    if (!state) {
-        console.log("Light is offline or unplugged.");
-        return;
-    }
-
-    if (state.state == false) {
-        return;
-    }
-
-    const brightness = state.dimming;
-
-    const delayTime = 100;
-    const frames = time / delayTime;
-
-    for (let i = frames; i >= 0; i--) {
-        const progress = i / (frames);
-        const dimming = Math.round(progress * brightness);
-        sendWizardCommand({ state: true, dimming: dimming });
-        await delay(delayTime);
-    }
-
-    sendWizardCommand({ state: false });
-}
-
-function turnOnNightLight() {
-    sendWizardCommand({ state: true, r: 200, b: 0, g: 0, dimming: 2 });
-}
-
-function turnOffNightLight() {
-    sendWizardCommand({ state: false, r: 200, b: 0, g: 0, dimming: 2 });
-}
-
-async function isLightOn() {
-    const state = await getWizardState();
-    return state.state;
-}
-
-function sendWizardCommand(paramsObj) {
-    const client = dgram.createSocket('udp4');
-
-    const message = JSON.stringify({
-        method: 'setPilot',
-        params: paramsObj
-    });
-
-    const timer = setTimeout(() => {
-        client.close();
-    }, 2000);
-
-    client.on('message', (msg, rinfo) => {
-        clearTimeout(timer);
-        client.close();
-    });
-
-    client.send(message, 0, message.length, PORT, BULB_IP, (err) => {
-        if (err) {
-            clearTimeout(timer);
-            console.error('Send error:', err);
-            client.close();
-        }
-    });
-}
-
-function getWizardState() {
-    return new Promise((resolve, reject) => {
-        const client = dgram.createSocket('udp4');
-        const message = JSON.stringify({
-            method: 'getPilot',
-            params: {}
-        });
-
-        const timer = setTimeout(() => {
-            client.close();
-            resolve(null);
-        }, 2000);
-
-        client.on('message', (msg, rinfo) => {
-            clearTimeout(timer);
-            client.close();
+            const dimming = Math.max(1, Math.round(curveProgress * 100));
+            const temp = 2200 + Math.round(2000 * curveProgress);
+            console.log(temp);
+            console.log(dimming);
             try {
-                const response = JSON.parse(msg.toString());
-                resolve(response.result); // This contains the light's actual state parameters
-            } catch (err) {
-                resolve(null);
+                await wl.setLightProps({ state: true, temp: temp, dimming: dimming, c: 0, w: 0 });
+                await delay(1000);
+                errorCount = 0;
+            } catch (e) {
+                errorCount++;
+                if (errorCount > 5) {
+                    break;
+                }
             }
-        });
+        } else {
+            await wl.setLightProps({ state: true, temp: 4200, dimming: 100, c: 0, w: 0 });
+            break;
+        }
+    }
+}
 
-        client.send(message, 0, message.length, PORT, BULB_IP, (err) => {
-            if (err) {
-                clearTimeout(timer);
-                client.close();
-                resolve(null);
-            }
-        });
-    });
+export async function turnLightOff() {
+    try {
+        await wl.setLightProps({ state: false });
+        lightOn = false;
+    } catch (e) {
+        return;
+    }
+}
+
+export async function turnNightLightOn() {
+    await wl.setLightProps({ state: true, r: 200, b: 0, g: 0, c: 0, w: 0, dimming: 2 });
+}
+
+export async function turnNightLightOff() {
+    await wl.setLightProps({ state: false });
+}
+
+export async function isLightOn() {
+    return await getLightState > 0;
+}
+
+async function getLightState() {
+    try {
+        const status = await wl.getStatus();
+
+        if (status.result.state === true) {
+            return 1;
+        }
+
+        return 0;
+    } catch (e) {
+        return -1;
+    }
 }
 
 const delay = (durationMs) => {
     return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-module.exports = {
-    turnLightOn,
-    turnLightOff,
-    turnOnNightLight,
-    turnOffNightLight,
-    isLightOn
-};
-
+await turnLightOn(0);
+process.exit(0);

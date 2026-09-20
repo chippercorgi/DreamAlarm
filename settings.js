@@ -9,7 +9,7 @@ function minutes(m) {
     return m * MINUTE;
 }
 
-module.exports = {
+export default {
     fastAudioFadeTime: seconds(5),
     slowAudioFadeTime: seconds(60),
     musicVolume: 40,
