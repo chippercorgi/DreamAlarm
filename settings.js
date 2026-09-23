@@ -10,12 +10,12 @@ function minutes(m) {
 }
 
 export default {
-    fastAudioFadeTime: seconds(5),
+    fastAudioFadeTime: seconds(3),
     slowAudioFadeTime: seconds(60),
     musicVolume: 40,
     whiteNoiseVolume: 40,
 
     fastLightFadeTime: seconds(5),
-    slowLightFadeTime: minutes(15),
+    slowLightFadeTime: minutes(3),
     lightTimeOutTime: minutes(10)
 };

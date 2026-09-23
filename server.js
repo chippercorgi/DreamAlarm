@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 
         res.render('showAlarm', { day, hour, minute });
     } else {
-        res.sendFile(path.join(__dirname, 'public', 'setAlarm.html'));
+        res.sendFile(path.join(import.meta.dirname, 'public', 'setAlarm.html'));
     }
 });
 

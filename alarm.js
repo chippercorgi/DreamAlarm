@@ -11,7 +11,7 @@ if (alarmTime > 0) {
     scheduleAlarm(alarmTime);
 }
 
-export function scheduleAlarm(time) {
+function scheduleAlarm(time) {
     alarmTime = time;
     saveAlarmTime(time);
     const currentTime = Date.now();
@@ -56,7 +56,7 @@ export function scheduleAlarm(time) {
     }
 }
 
-export function turnOffAlarm() {
+function turnOffAlarm() {
 
     const alarmTimePassed = Date.now() > alarmTime;
     alarmTime = 0;
@@ -77,7 +77,7 @@ export function turnOffAlarm() {
     }
 }
 
-export function getAlarmTime() {
+function getAlarmTime() {
     return alarmTime;
 }
 
@@ -99,4 +99,10 @@ function saveAlarmTime(alarmTime) {
     } catch (error) {
         console.log(error);
     }
+}
+
+export default {
+    scheduleAlarm,
+    turnOffAlarm,
+    getAlarmTime
 }

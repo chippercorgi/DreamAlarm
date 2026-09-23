@@ -10,7 +10,7 @@ let token = 0;
 
 let playlist = getFiles();
 
-export async function startWhiteNoise(fadeInTime) {
+async function startWhiteNoise(fadeInTime) {
 
     const localToken = ++token;
 
@@ -42,7 +42,7 @@ export async function startWhiteNoise(fadeInTime) {
     }
 }
 
-export async function startMusic(fadeOutTime, fadeInTime) {
+async function startMusic(fadeOutTime, fadeInTime) {
 
     const localToken = ++token;
 
@@ -75,7 +75,9 @@ export async function startMusic(fadeOutTime, fadeInTime) {
     audioProcess.stdout.on('data', (data) => {
         const output = data.toString();
         if (output.includes('@P 0')) {
-            audioProcess.stdin.write(`load ${playlist[index]}\n`);
+            if (audioProcess) {
+                audioProcess.stdin.write(`load ${playlist[index]}\n`);
+            }
 
             index++;
             if (index === playlist.length) {
@@ -96,7 +98,7 @@ export async function startMusic(fadeOutTime, fadeInTime) {
     }
 }
 
-export async function stopAudio(fadeOutTime) {
+async function stopAudio(fadeOutTime) {
 
     const localToken = ++token;
 
@@ -138,4 +140,10 @@ function shufflePlaylist() {
 
 const delay = (durationMs) => {
     return new Promise(resolve => setTimeout(resolve, durationMs));
+}
+
+export default {
+    startWhiteNoise,
+    startMusic,
+    stopAudio
 }

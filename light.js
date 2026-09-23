@@ -3,7 +3,7 @@ const wl = new WizLight('10.0.1.10', { statusCheckTimeout: 3000, retryTimes: 1 }
 
 let lightOn = false;
 
-export async function turnLightOn(fadeInTime) {
+async function turnLightOn(fadeInTime) {
 
     const lightState = await getLightState();
     if (lightState === -1) {
@@ -31,8 +31,6 @@ export async function turnLightOn(fadeInTime) {
 
             const dimming = Math.max(1, Math.round(curveProgress * 100));
             const temp = 2200 + Math.round(2000 * curveProgress);
-            console.log(temp);
-            console.log(dimming);
             try {
                 await wl.setLightProps({ state: true, temp: temp, dimming: dimming, c: 0, w: 0 });
                 await delay(1000);
@@ -50,7 +48,7 @@ export async function turnLightOn(fadeInTime) {
     }
 }
 
-export async function turnLightOff() {
+async function turnLightOff() {
     try {
         await wl.setLightProps({ state: false });
         lightOn = false;
@@ -59,16 +57,16 @@ export async function turnLightOff() {
     }
 }
 
-export async function turnNightLightOn() {
+async function turnNightLightOn() {
     await wl.setLightProps({ state: true, r: 200, b: 0, g: 0, c: 0, w: 0, dimming: 2 });
 }
 
-export async function turnNightLightOff() {
+async function turnNightLightOff() {
     await wl.setLightProps({ state: false });
 }
 
-export async function isLightOn() {
-    return await getLightState > 0;
+async function isLightOn() {
+    return await getLightState() > 0;
 }
 
 async function getLightState() {
@@ -89,5 +87,10 @@ const delay = (durationMs) => {
     return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-await turnLightOn(0);
-process.exit(0);
+export default {
+    turnLightOn,
+    turnLightOff,
+    turnNightLightOn,
+    turnNightLightOff,
+    isLightOn
+};
