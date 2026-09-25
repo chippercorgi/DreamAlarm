@@ -2,6 +2,7 @@ import path from 'path';
 import express from 'express';
 import alarm from './alarm.js';
 import light from './light.js';
+import settings from './settings.js';
 
 const app = express();
 
@@ -11,7 +12,7 @@ app.use(express.static(path.join(import.meta.dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-    const alarmTime = alarm.getAlarmTime();
+    const alarmTime = settings.getAlarmTime();
 
     if (alarmTime > 0) {
         const date = new Date(alarmTime);
@@ -27,8 +28,9 @@ app.get('/', (req, res) => {
 
 app.post('/setAlarm', (req, res) => {
 
-    if (alarm.getAlarmTime() == 0) {
+    if (settings.getAlarmTime() == 0) {
         const alarmTime = Number(req.body.timestamp);
+        settings.setAlarmTime(alarmTime);
         alarm.scheduleAlarm(alarmTime);
     }
     res.redirect('/');
@@ -36,8 +38,9 @@ app.post('/setAlarm', (req, res) => {
 
 app.get('/setAlarm/:alarmTime', (req, res) => {
 
-    if (alarm.getAlarmTime() == 0) {
+    if (settings.getAlarmTime() == 0) {
         const alarmTime = Number(req.params.alarmTime);
+        settings.setAlarmTime(alarmTime);
         alarm.scheduleAlarm(alarmTime);
     }
     res.json({
@@ -46,11 +49,13 @@ app.get('/setAlarm/:alarmTime', (req, res) => {
 });
 
 app.post('/turnOffAlarm', (req, res) => {
+    settings.setAlarmTime(0);
     alarm.turnOffAlarm();
     res.redirect('/');
 });
 
 app.get('/turnOffAlarm', (req, res) => {
+    settings.setAlarmTime(0);
     alarm.turnOffAlarm();
     res.sendStatus(200);
 });

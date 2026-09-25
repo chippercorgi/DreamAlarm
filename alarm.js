@@ -1,11 +1,9 @@
-import fs from 'fs';
-import path from 'path';
 import light from './light.js';
 import sound from './sound.js';
 import settings from './settings.js';
 
 let timers = [];
-let alarmTime = loadAlarmTime();
+let alarmTime = settings.getAlarmTime();
 
 if (alarmTime > 0) {
     scheduleAlarm(alarmTime);
@@ -13,7 +11,7 @@ if (alarmTime > 0) {
 
 function scheduleAlarm(time) {
     alarmTime = time;
-    saveAlarmTime(time);
+    settings.setAlarmTime(time);
     const currentTime = Date.now();
 
 
@@ -59,9 +57,6 @@ function scheduleAlarm(time) {
 function turnOffAlarm() {
 
     const alarmTimePassed = Date.now() > alarmTime;
-    alarmTime = 0;
-    saveAlarmTime(0);
-
 
     timers.forEach(timerId => clearTimeout(timerId));
     timers = [];
@@ -77,32 +72,7 @@ function turnOffAlarm() {
     }
 }
 
-function getAlarmTime() {
-    return alarmTime;
-}
-
-function loadAlarmTime() {
-    try {
-        const savedAlarmPath = path.join(import.meta.dirname, 'alarm.json');
-        const savedAlarm = JSON.parse(fs.readFileSync(savedAlarmPath, 'utf-8'));
-        return savedAlarm.time;
-    } catch (error) {
-        console.log(error);
-        return 0;
-    }
-}
-
-function saveAlarmTime(alarmTime) {
-    try {
-        const savedAlarmPath = path.join(import.meta.dirname, 'alarm.json');
-        fs.writeFileSync(savedAlarmPath, JSON.stringify({ time: alarmTime }, null, 2), 'utf8');
-    } catch (error) {
-        console.log(error);
-    }
-}
-
 export default {
     scheduleAlarm,
-    turnOffAlarm,
-    getAlarmTime
+    turnOffAlarm
 }

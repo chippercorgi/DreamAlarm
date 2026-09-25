@@ -5,6 +5,9 @@ node_modules/
 music/*
 noise/*
 
+# Ignore saved alarm time
+settings.json
+
 !data/alarm.json
 !data/.gitkeep
 !music/.gitkeep
